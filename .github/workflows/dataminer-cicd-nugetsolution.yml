@@ -1,0 +1,19 @@
+name: DataMiner CICD NuGet Solution
+
+on:
+  push:
+    branches:
+      - '**'
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+"
+      - "[0-9]+.[0-9]+.[0-9]+-**"
+
+  workflow_dispatch:
+
+jobs:
+  CICD:
+    uses: SkylineCommunications/_ReusableWorkflows/.github/workflows/Master Workflow.yml@main
+    #with:
+      #nuget-push-source: "https://api.nuget.org/v3/index.json"
+    secrets:
+      NUGET_API_KEY: ${{ secrets.NUGETAPIKEY_GITHUB }}

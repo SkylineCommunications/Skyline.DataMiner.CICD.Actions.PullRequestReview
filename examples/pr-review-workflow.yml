@@ -1,0 +1,52 @@
+# Example workflow that consumes the Skyline.DataMiner.CICD.Tools.PullRequestReviewValidator .NET tool
+# to validate a pull request's review state (CR / QA / Docs) and use the result as a required status
+# check in a repository ruleset.
+#
+# Copy this file into `.github/workflows/` of the target repository and:
+#   1. Create an organization or repository secret named `PR_REVIEW_VALIDATOR_TOKEN` containing a PAT
+#      (or GitHub App installation token) with `read:org` access. The default `secrets.GITHUB_TOKEN`
+#      does NOT have enough permissions to check organization/team membership.
+#   2. Once the tool has been published to the Skyline GitHub Packages NuGet feed
+#      (https://nuget.pkg.github.com/SkylineCommunications/index.json), add this workflow's job
+#      ("Validate CR / QA / Docs approvals") as a required status check in the branch ruleset that
+#      protects the target branch(es).
+#   3. Optionally tune `--docs-team` and `--docs-path-pattern` to match the repository's docs review
+#      team slug and documentation folder(s).
+
+name: PR Review Validation
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
+  pull_request_review:
+    types: [submitted, edited, dismissed]
+
+# Avoid redundant runs when new reviews/commits arrive in quick succession.
+concurrency:
+  group: pr-review-validation-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  validate-pr-review:
+    name: Validate CR / QA / Docs approvals
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Add Skyline GitHub NuGet source
+        run: dotnet nuget add source "https://nuget.pkg.github.com/SkylineCommunications/index.json" --name github --username USERNAME --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text
+
+      - name: Install PR Review Validator
+        run: dotnet tool install -g Skyline.DataMiner.CICD.Tools.PullRequestReviewValidator --prerelease
+
+      - name: Validate pull request reviews
+        run: |
+          pr-review-validate \
+            --github-token "${{ secrets.PR_REVIEW_VALIDATOR_TOKEN }}" \
+            --github-repository "${{ github.repository }}" \
+            --pr-number "${{ github.event.pull_request.number }}" \
+            --docs-team "TEAM-DOCS-REVIEWERS" \
+            --docs-path-pattern "CatalogInformation"
