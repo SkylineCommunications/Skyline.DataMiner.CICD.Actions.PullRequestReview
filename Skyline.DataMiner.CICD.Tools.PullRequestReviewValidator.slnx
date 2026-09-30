@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/Skyline.DataMiner.CICD.Tools.PullRequestReviewValidator/">
+    <Project Path="Skyline.DataMiner.CICD.Tools.PullRequestReviewValidator/CICD.Tools.PullRequestReviewValidator.csproj" />
+  </Folder>
+  <Project Path="CICD.Tools.PullRequestReviewValidatorTests/CICD.Tools.PullRequestReviewValidatorTests.csproj" />
+</Solution>
