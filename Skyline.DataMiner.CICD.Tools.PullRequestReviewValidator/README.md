@@ -36,11 +36,17 @@ organization or team membership, so it cannot be used here.
 
 ### Installation
 
-Install the tool via the terminal:
+The tool is published to the **Skyline GitHub Packages NuGet feed**, not nuget.org, so this source
+must be registered before installing it:
 
 ```bash
-dotnet tool install -g Skyline.DataMiner.CICD.Tools.PullRequestReviewValidator
+dotnet nuget add source "https://nuget.pkg.github.com/SkylineCommunications/index.json" --name github --username USERNAME --password <A_TOKEN_WITH_read:packages_SCOPE> --store-password-in-clear-text
+
+dotnet tool install -g Skyline.DataMiner.CICD.Tools.PullRequestReviewValidator --prerelease
 ```
+
+> `--prerelease` is required while the tool is only available as a pre-release version (e.g.
+> `1.0.0-Beta2`). Once a stable version is published it can be omitted.
 
 ### Running the Tool
 
@@ -63,7 +69,8 @@ pr-review-validate --github-token "your_token" --github-repository "owner/repo" 
 
 ## Example Usage in a GitHub Workflow
 
-> **Note:** the snippet below assumes the tool has been published to NuGet. See the repository's
+> **Note:** the snippet below assumes the tool has been published to the Skyline GitHub Packages
+> NuGet feed (`https://nuget.pkg.github.com/SkylineCommunications/index.json`). See the repository's
 > [`examples/pr-review-workflow.yml`](../examples/pr-review-workflow.yml) for a ready-to-copy workflow.
 
 ```yaml
@@ -80,6 +87,9 @@ jobs:
     name: Validate CR / QA / Docs approvals
     runs-on: ubuntu-latest
     steps:
+      - name: Add Skyline GitHub NuGet source
+        run: dotnet nuget add source "https://nuget.pkg.github.com/SkylineCommunications/index.json" --name github --username USERNAME --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text
+
       - name: Install .NET Tool
         run: dotnet tool install -g Skyline.DataMiner.CICD.Tools.PullRequestReviewValidator --prerelease
 
